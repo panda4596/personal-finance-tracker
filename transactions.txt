@@ -1,0 +1,4 @@
+Income: 10000
+Expense: 4000
+Income: 5000.0
+Expense: 9000.0
