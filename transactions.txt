@@ -1,3 +1,0 @@
-Income: 15000.0
-Expense: 10000.0:Food
-Expense: 2000.0:Education

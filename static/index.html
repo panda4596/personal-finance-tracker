@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Finance Tracker - Multi-User Cloud</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- Supabase official JS client for secure client-side authentication -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app-wrapper">
+
+    <!-- Global Alert / Notification Toast -->
+    <div id="globalAlert" class="alert hidden" role="alert"></div>
+
+    <!-- ============================================================ -->
+    <!-- AUTHENTICATION SCREEN (Shown when logged out)                -->
+    <!-- ============================================================ -->
+    <section id="authView" class="auth-container">
+      <div class="auth-card glass-panel">
+        <div class="auth-header">
+          <div class="brand-badge">Cloud Finance</div>
+          <h1>Personal Finance Tracker</h1>
+          <p class="subtitle">Secure, multi-user personal wealth tracker</p>
+        </div>
+
+        <!-- Auth Mode Tabs -->
+        <div class="auth-tabs">
+          <button type="button" id="tabLogin" class="tab-btn active">Sign In</button>
+          <button type="button" id="tabSignup" class="tab-btn">Create Account</button>
+        </div>
+
+        <!-- Auth Form -->
+        <form id="authForm" class="auth-form">
+          <div class="form-group">
+            <label for="authEmail">Email Address</label>
+            <input 
+              type="email" 
+              id="authEmail" 
+              placeholder="you@example.com" 
+              autocomplete="email" 
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="authPassword">Password</label>
+            <input 
+              type="password" 
+              id="authPassword" 
+              placeholder="••••••••" 
+              autocomplete="current-password" 
+              required
+            >
+          </div>
+
+          <div class="auth-actions">
+            <button type="submit" id="authSubmitBtn" class="btn btn-primary">Sign In</button>
+            <button type="button" id="forgotPasswordBtn" class="link-btn">Forgot password?</button>
+          </div>
+        </form>
+
+        <!-- Password Reset Box (Hidden by default) -->
+        <div id="resetBox" class="reset-box hidden">
+          <h3>Reset Password</h3>
+          <p class="text-muted">Enter your email and we'll send you a password recovery link.</p>
+          <div class="form-group" style="margin-top: 10px;">
+            <input type="email" id="resetEmail" placeholder="your-email@example.com">
+          </div>
+          <div class="reset-actions">
+            <button type="button" id="sendResetBtn" class="btn btn-secondary">Send Reset Link</button>
+            <button type="button" id="cancelResetBtn" class="link-btn">Back to Sign In</button>
+          </div>
+        </div>
+
+        <div class="auth-footer text-muted">
+          <span>Protected by Supabase Auth &amp; PostgreSQL Row Level Security</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- PROTECTED DASHBOARD (Shown when logged in)                   -->
+    <!-- ============================================================ -->
+    <section id="dashboardView" class="dashboard-container hidden">
+
+      <!-- Top Header / Profile Bar -->
+      <header class="app-header glass-panel">
+        <div class="header-brand">
+          <h2>Personal Finance Tracker</h2>
+          <span class="badge-pill">Private Cloud</span>
+        </div>
+
+        <div class="user-profile">
+          <div class="user-info">
+            <span class="user-label">Logged in as</span>
+            <span class="user-email" id="userEmailDisplay">user@example.com</span>
+          </div>
+          <button type="button" id="logoutBtn" class="btn btn-logout" title="Sign out">Log Out</button>
+        </div>
+      </header>
+
+      <!-- 1. Stats Dashboard: Total Income, Total Expenses, Current Balance -->
+      <section class="stats-grid">
+        <div class="stat-card glass-panel income-border">
+          <span class="stat-label">Total Income</span>
+          <span class="stat-value text-income" id="totalIncome">₹0.00</span>
+          <span class="stat-meta">Accumulated earnings</span>
+        </div>
+
+        <div class="stat-card glass-panel expense-border">
+          <span class="stat-label">Total Expenses</span>
+          <span class="stat-value text-expense" id="totalExpense">₹0.00</span>
+          <span class="stat-meta">Accumulated spend</span>
+        </div>
+
+        <div class="stat-card glass-panel balance-border">
+          <span class="stat-label">Current Balance</span>
+          <span class="stat-value text-balance" id="currentBalance">₹0.00</span>
+          <span class="stat-meta">Net available funds</span>
+        </div>
+      </section>
+
+      <!-- 2. Transaction Entry Forms: Income & Expense -->
+      <section class="forms-grid">
+        
+        <!-- Add Income Card -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h3 class="card-title text-income">Add Income</h3>
+            <span class="card-tag income-tag">+ Inflow</span>
+          </div>
+          <form id="incomeForm">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="incomeAmount">Amount (₹) *</label>
+                <input type="number" id="incomeAmount" step="any" placeholder="e.g. 50000" required>
+              </div>
+              <div class="form-group flex-1">
+                <label for="incomeCategory">Category *</label>
+                <select id="incomeCategory" required>
+                  <!-- Populated dynamically via /api/config -->
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="incomeDate">Date *</label>
+                <input type="date" id="incomeDate" required>
+              </div>
+              <div class="form-group flex-2">
+                <label for="incomeDesc">Description / Note</label>
+                <input type="text" id="incomeDesc" placeholder="e.g. Monthly salary from employer">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-income">Record Income</button>
+          </form>
+        </div>
+
+        <!-- Add Expense Card -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h3 class="card-title text-expense">Add Expense</h3>
+            <span class="card-tag expense-tag">- Outflow</span>
+          </div>
+          <form id="expenseForm">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="expenseAmount">Amount (₹) *</label>
+                <input type="number" id="expenseAmount" step="any" placeholder="e.g. 1200" required>
+              </div>
+              <div class="form-group flex-1">
+                <label for="expenseCategory">Category *</label>
+                <select id="expenseCategory" required>
+                  <!-- Populated dynamically via /api/config -->
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="expenseDate">Date *</label>
+                <input type="date" id="expenseDate" required>
+              </div>
+              <div class="form-group flex-2">
+                <label for="expenseDesc">Description / Note</label>
+                <input type="text" id="expenseDesc" placeholder="e.g. Weekly grocery shopping">
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-expense">Record Expense</button>
+          </form>
+        </div>
+
+      </section>
+
+      <!-- 3. Summaries Grid: Monthly Breakdown & Category Breakdown -->
+      <section class="summaries-grid">
+        
+        <!-- Category Summary -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h3 class="card-title">Category-wise Expenses</h3>
+            <span class="card-meta">All-time</span>
+          </div>
+          <div id="categorySummaryContainer" class="summary-list">
+            <p class="empty-state">No expenses recorded yet.</p>
+          </div>
+        </div>
+
+        <!-- Monthly Summary -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h3 class="card-title">Monthly Financial Summary</h3>
+            <span class="card-meta">Inflows vs Outflows</span>
+          </div>
+          <div id="monthlySummaryContainer" class="summary-list">
+            <p class="empty-state">No monthly data available yet.</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 4. Transactions History with Filtering and Deletion -->
+      <section class="card glass-panel transactions-card">
+        <div class="card-header-flex">
+          <div>
+            <h3 class="card-title">Transaction History</h3>
+            <p class="subtitle" id="txCountSubtitle">0 records recorded in private cloud</p>
+          </div>
+
+          <!-- Filters -->
+          <div class="filters-bar">
+            <select id="filterType" class="filter-input">
+              <option value="all">All Types</option>
+              <option value="Income">Income only</option>
+              <option value="Expense">Expense only</option>
+            </select>
+
+            <input type="date" id="filterDateFrom" class="filter-input" title="From Date">
+            <input type="date" id="filterDateTo" class="filter-input" title="To Date">
+
+            <button type="button" id="clearFiltersBtn" class="btn btn-secondary btn-sm">Clear</button>
+          </div>
+        </div>
+
+        <div id="transactionsContainer" class="transactions-list">
+          <p class="empty-state">No transactions recorded yet.</p>
+        </div>
+      </section>
+
+    </section>
+
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
