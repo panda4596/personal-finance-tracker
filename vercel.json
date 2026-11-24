@@ -12,6 +12,10 @@
   ],
   "routes": [
     {
+      "src": "/google711f4f8e30994a2d\\.html",
+      "dest": "/static/google711f4f8e30994a2d.html"
+    },
+    {
       "src": "/static/(.*)",
       "dest": "/static/$1"
     },
