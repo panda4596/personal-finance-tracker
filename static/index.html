@@ -1,261 +1,787 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personal Finance Tracker - Multi-User Cloud</title>
+  <title>Panda Financial Tracker</title>
+  <link rel="icon" type="image/png" href="/static/panda-finance-logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
-  <!-- Supabase official JS client for secure client-side authentication -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <div class="app-wrapper">
+  <div id="top"></div>
 
-    <!-- Global Alert / Notification Toast -->
-    <div id="globalAlert" class="alert hidden" role="alert"></div>
+  <!-- Toast Stack -->
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
 
-    <!-- ============================================================ -->
-    <!-- AUTHENTICATION SCREEN (Shown when logged out)                -->
-    <!-- ============================================================ -->
-    <section id="authView" class="auth-container">
-      <div class="auth-card glass-panel">
-        <div class="auth-header">
-          <div class="brand-badge">Cloud Finance</div>
-          <h1>Personal Finance Tracker</h1>
-          <p class="subtitle">Secure, multi-user personal wealth tracker</p>
+  <!-- ================================================================== -->
+  <!-- AUTHENTICATION VIEW                                                -->
+  <!-- ================================================================== -->
+  <main id="authView" class="auth-shell">
+    <div class="auth-showcase">
+      <div class="showcase-inner">
+        <div class="brand-lockup">
+          <div class="brand-mark">
+            <img src="/static/panda-finance-logo.png" alt="Panda Financial Tracker logo" class="brand-logo-img">
+          </div>
+          <span class="brand-name">Panda Financial Tracker</span>
         </div>
 
-        <!-- Auth Mode Tabs -->
-        <div class="auth-tabs">
-          <button type="button" id="tabLogin" class="tab-btn active">Sign In</button>
-          <button type="button" id="tabSignup" class="tab-btn">Create Account</button>
+        <div class="showcase-copy">
+          <h1 id="showcaseHeading" data-i18n-html="showcaseHeading">Clear numbers.<br>Zero spreadsheet friction.</h1>
+          <p id="showcaseSub" data-i18n="showcaseSub">Track cashflow, categorize daily spending, and review monthly savings rate in a private workspace backed by Row Level Security.</p>
         </div>
 
-        <!-- Auth Form -->
-        <form id="authForm" class="auth-form">
-          <div class="form-group">
-            <label for="authEmail">Email Address</label>
-            <input 
-              type="email" 
-              id="authEmail" 
-              placeholder="you@example.com" 
-              autocomplete="email" 
-              required
-            >
+        <div class="preview-card" aria-hidden="true">
+          <div class="preview-head">
+            <span data-i18n="previewNetLabel">Net Cashflow</span>
+            <span class="preview-pill" data-i18n="previewPill">+24.8% savings</span>
           </div>
-
-          <div class="form-group">
-            <label for="authPassword">Password</label>
-            <input 
-              type="password" 
-              id="authPassword" 
-              placeholder="••••••••" 
-              autocomplete="current-password" 
-              required
-            >
+          <div id="showcasePreviewAmount" class="preview-balance mono">₹1,42,850.00</div>
+          <div class="preview-bars">
+            <div class="pbar"><span style="height: 48%"></span><span class="pbar-exp" style="height: 30%"></span></div>
+            <div class="pbar"><span style="height: 62%"></span><span class="pbar-exp" style="height: 41%"></span></div>
+            <div class="pbar"><span style="height: 55%"></span><span class="pbar-exp" style="height: 36%"></span></div>
+            <div class="pbar"><span style="height: 78%"></span><span class="pbar-exp" style="height: 44%"></span></div>
+            <div class="pbar"><span style="height: 71%"></span><span class="pbar-exp" style="height: 39%"></span></div>
+            <div class="pbar"><span style="height: 92%"></span><span class="pbar-exp" style="height: 48%"></span></div>
           </div>
-
-          <div class="auth-actions">
-            <button type="submit" id="authSubmitBtn" class="btn btn-primary">Sign In</button>
-            <button type="button" id="forgotPasswordBtn" class="link-btn">Forgot password?</button>
-          </div>
-        </form>
-
-        <!-- Password Reset Box (Hidden by default) -->
-        <div id="resetBox" class="reset-box hidden">
-          <h3>Reset Password</h3>
-          <p class="text-muted">Enter your email and we'll send you a password recovery link.</p>
-          <div class="form-group" style="margin-top: 10px;">
-            <input type="email" id="resetEmail" placeholder="your-email@example.com">
-          </div>
-          <div class="reset-actions">
-            <button type="button" id="sendResetBtn" class="btn btn-secondary">Send Reset Link</button>
-            <button type="button" id="cancelResetBtn" class="link-btn">Back to Sign In</button>
-          </div>
-        </div>
-
-        <div class="auth-footer text-muted">
-          <span>Protected by Supabase Auth &amp; PostgreSQL Row Level Security</span>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- ============================================================ -->
-    <!-- PROTECTED DASHBOARD (Shown when logged in)                   -->
-    <!-- ============================================================ -->
-    <section id="dashboardView" class="dashboard-container hidden">
+    <div class="auth-panel">
+      <div class="auth-box">
+        <div class="auth-top-bar">
+          <div class="auth-mobile-brand">
+            <div class="brand-mark">
+              <img src="/static/panda-finance-logo.png" alt="Panda Financial Tracker logo" class="brand-logo-img">
+            </div>
+            <span class="brand-name">Panda Financial Tracker</span>
+          </div>
 
-      <!-- Top Header / Profile Bar -->
-      <header class="app-header glass-panel">
-        <div class="header-brand">
-          <h2>Personal Finance Tracker</h2>
-          <span class="badge-pill">Private Cloud</span>
+          <div class="auth-locale-row">
+            <select id="authLangSelect" class="input-sm locale-select" aria-label="Website language">
+              <option value="en">English (EN)</option>
+              <option value="bn">বাংলা (BN)</option>
+              <option value="hi">हिन्दी (HI)</option>
+            </select>
+            <select id="authCountrySelect" class="input-sm locale-select" aria-label="Country and currency"></select>
+          </div>
         </div>
 
-        <div class="user-profile">
-          <div class="user-info">
-            <span class="user-label">Logged in as</span>
-            <span class="user-email" id="userEmailDisplay">user@example.com</span>
+        <div class="auth-heading">
+          <h2 id="authTitle">Sign in to your account</h2>
+          <p id="authSubtitle">Enter your credentials to open your personal ledger.</p>
+        </div>
+
+        <div class="segmented-control" role="tablist">
+          <button type="button" id="tabLogin" class="seg-btn active" role="tab" aria-selected="true" data-i18n="signInBtn">Sign In</button>
+          <button type="button" id="tabSignup" class="seg-btn" role="tab" aria-selected="false" data-i18n="signUpBtn">Create Account</button>
+        </div>
+
+        <form id="authForm" class="stack-md" novalidate>
+          <div class="field">
+            <label for="authEmail" id="authEmailLabel" data-i18n="emailLabel">Email</label>
+            <input type="email" id="authEmail" placeholder="name@domain.com" autocomplete="email" required>
           </div>
-          <button type="button" id="logoutBtn" class="btn btn-logout" title="Sign out">Log Out</button>
+
+          <div class="field">
+            <div class="field-label-row">
+              <label for="authPassword" id="authPasswordLabel" data-i18n="passwordLabel">Password</label>
+              <button type="button" id="forgotPasswordBtn" class="text-link" data-i18n="forgotPassword">Forgot password?</button>
+            </div>
+            <div class="input-with-icon">
+              <input type="password" id="authPassword" data-i18n-placeholder="passwordPlaceholder" placeholder="Enter your password" autocomplete="current-password" required>
+              <button type="button" id="togglePasswordBtn" class="icon-inside" aria-label="Toggle password visibility">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="authSubmitBtn" class="btn btn-primary btn-full">Sign In</button>
+        </form>
+
+        <!-- Password Reset Panel -->
+        <div id="resetBox" class="reset-panel hidden">
+          <div class="reset-head">
+            <h3 data-i18n="resetTitle">Reset password</h3>
+            <p data-i18n="resetSub">We will email you a secure recovery link.</p>
+          </div>
+          <div class="field">
+            <label for="resetEmail" data-i18n="accountEmailLabel">Account email</label>
+            <input type="email" id="resetEmail" placeholder="name@domain.com">
+          </div>
+          <div class="row-gap">
+            <button type="button" id="sendResetBtn" class="btn btn-primary flex-1" data-i18n="sendLinkBtn">Send Link</button>
+            <button type="button" id="cancelResetBtn" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+          </div>
+        </div>
+
+        <p class="auth-footnote" data-i18n="securityNote">
+          Protected with Supabase Auth &amp; PostgreSQL Row Level Security.
+        </p>
+
+        <footer class="site-footer auth-footer-inline">
+          <span>Panda Financial Tracker</span>
+          <span class="sep">&middot;</span>
+          <a href="https://saptak-dev.vercel.app/" target="_blank" rel="noopener noreferrer" class="portfolio-footer__brand-link">Saptak Sardar (panda4596)</a>[cite: 11]
+        </footer>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================================================================== -->
+  <!-- PROTECTED DASHBOARD SHELL                                          -->
+  <!-- ================================================================== -->
+  <div id="dashboardView" class="app-shell hidden">
+    <div id="sidebarBackdrop" class="backdrop hidden"></div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-lockup">
+          <div class="brand-mark">
+            <img src="/static/panda-finance-logo.png" alt="Panda Financial Tracker logo" class="brand-logo-img">
+          </div>
+          <span class="brand-name">Panda Finance</span>
+        </div>
+        <button type="button" id="closeSidebarBtn" class="icon-btn mobile-only" aria-label="Close menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Primary">
+        <span class="nav-section-label" id="navSectionLabel" data-i18n="workspaceLabel">Workspace</span>
+        <button type="button" class="nav-item active" data-view="overview">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="7" height="9" x="3" y="3" rx="1"/>
+            <rect width="7" height="5" x="14" y="3" rx="1"/>
+            <rect width="7" height="9" x="14" y="12" rx="1"/>
+            <rect width="7" height="5" x="3" y="16" rx="1"/>
+          </svg>
+          <span data-i18n="navOverview">Overview</span>
+        </button>
+
+        <button type="button" class="nav-item" data-view="transactions">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/>
+            <path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/>
+          </svg>
+          <span data-i18n="navTransactions">Transactions</span>
+          <span id="navTxBadge" class="nav-count mono">0</span>
+        </button>
+
+        <button type="button" class="nav-item" data-view="analytics">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3v18h18"/>
+            <path d="m19 9-5 5-4-4-3 3"/>
+          </svg>
+          <span data-i18n="navAnalytics">Analytics</span>
+        </button>
+
+        <div class="sidebar-locale-box">
+          <label for="dashLangSelect" class="locale-mini-label" data-i18n="languageLabel">Language</label>
+          <select id="dashLangSelect" class="input-sm locale-select-full">
+            <option value="en">English (EN)</option>
+            <option value="bn">বাংলা (BN)</option>
+            <option value="hi">हिन्दी (HI)</option>
+          </select>
+
+          <label for="dashCurrencySelect" class="locale-mini-label" style="margin-top: 8px;" data-i18n="countryCurrencyLabel">Country &amp; Currency</label>
+          <select id="dashCurrencySelect" class="input-sm locale-select-full"></select>
+        </div>
+      </nav>
+
+      <div class="sidebar-shortcuts">
+        <div class="shortcut-row">
+          <span data-i18n="shortcutNew">New entry</span>
+          <kbd>N</kbd>
+        </div>
+        <div class="shortcut-row">
+          <span data-i18n="shortcutSearch">Search ledger</span>
+          <kbd>/</kbd>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button type="button" id="openAccountBtn" class="account-chip account-trigger" title="View & edit account details">
+          <div id="userAvatar" class="avatar">P</div>
+          <div class="account-meta">
+            <span id="userNameDisplay" class="account-name">Panda User</span>
+            <span id="userEmailDisplay" class="account-email">user@example.com</span>
+          </div>
+          <svg class="account-chevron" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </button>
+
+        <div class="sidebar-actions">
+          <button type="button" id="themeToggleBtn" class="btn btn-ghost btn-sm flex-1" title="Toggle theme">
+            <svg id="themeIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2"/><path d="M12 20v2"/>
+              <path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/>
+              <path d="M2 12h2"/><path d="M20 12h2"/>
+              <path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+            </svg>
+            <span id="themeLabel">Light</span>
+          </button>
+          <button type="button" id="logoutBtn" class="btn btn-ghost btn-sm btn-danger-hover" title="Sign out">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" x2="9" y1="12" y2="12"/>
+            </svg>
+            <span data-i18n="logoutBtn">Log out</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button type="button" id="mobileMenuBtn" class="icon-btn mobile-only" aria-label="Open navigation">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" x2="20" y1="12" y2="12"/>
+              <line x1="4" x2="20" y1="6" y2="6"/>
+              <line x1="4" x2="20" y1="18" y2="18"/>
+            </svg>
+          </button>
+          <div>
+            <h1 id="pageTitle" class="page-title">Overview</h1>
+            <p id="pageSubtitle" class="page-subtitle">Financial snapshot across all recorded periods</p>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <div class="quick-search">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="search" id="globalSearchInput" data-i18n-placeholder="searchPlaceholder" placeholder="Search transactions..." aria-label="Search transactions">
+            <kbd class="search-kbd">/</kbd>
+          </div>
+
+          <button type="button" id="openDrawerBtn" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="M12 5v14"/>
+            </svg>
+            <span data-i18n="addTransaction">Add Transaction</span>
+          </button>
         </div>
       </header>
 
-      <!-- 1. Stats Dashboard: Total Income, Total Expenses, Current Balance -->
-      <section class="stats-grid">
-        <div class="stat-card glass-panel income-border">
-          <span class="stat-label">Total Income</span>
-          <span class="stat-value text-income" id="totalIncome">₹0.00</span>
-          <span class="stat-meta">Accumulated earnings</span>
-        </div>
-
-        <div class="stat-card glass-panel expense-border">
-          <span class="stat-label">Total Expenses</span>
-          <span class="stat-value text-expense" id="totalExpense">₹0.00</span>
-          <span class="stat-meta">Accumulated spend</span>
-        </div>
-
-        <div class="stat-card glass-panel balance-border">
-          <span class="stat-label">Current Balance</span>
-          <span class="stat-value text-balance" id="currentBalance">₹0.00</span>
-          <span class="stat-meta">Net available funds</span>
-        </div>
-      </section>
-
-      <!-- 2. Transaction Entry Forms: Income & Expense -->
-      <section class="forms-grid">
-        
-        <!-- Add Income Card -->
-        <div class="card glass-panel">
-          <div class="card-header">
-            <h3 class="card-title text-income">Add Income</h3>
-            <span class="card-tag income-tag">+ Inflow</span>
+      <div class="workspace-body">
+        <!-- Greeting Banner -->
+        <div id="greetingBanner" class="greeting-banner hidden" role="status">
+          <div class="greeter-stage" aria-hidden="true">
+            <div class="greeter-character">
+              <svg width="34" height="34" viewBox="0 0 36 36" fill="none">
+                <circle cx="18" cy="18" r="17" fill="currentColor" fill-opacity="0.12" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="13.5" cy="15.5" r="1.8" fill="currentColor"/>
+                <circle cx="22.5" cy="15.5" r="1.8" fill="currentColor"/>
+                <path class="greeter-smile" d="M14 21.5c1.3 2 6.7 2 8 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              <span id="greeterHand" class="greeter-hand" aria-hidden="true">👋</span>
+            </div>
           </div>
-          <form id="incomeForm">
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label for="incomeAmount">Amount (₹) *</label>
-                <input type="number" id="incomeAmount" step="any" placeholder="e.g. 50000" required>
+
+          <div class="greeting-copy">
+            <div class="greeting-eyebrow">
+              <span id="greetingBadge" class="greeting-pill">Returning User</span>
+            </div>
+            <h2 id="greetingHeadline" class="greeting-title">Welcome back!</h2>
+            <p id="greetingSubtext" class="greeting-sub">Here is a live look at your balance and recent cashflow.</p>
+          </div>
+
+          <div class="greeting-actions">
+            <button type="button" id="greetingProfileBtn" class="btn btn-ghost btn-sm" data-i18n="accountProfileBtn">Account &amp; Profile</button>
+            <button type="button" id="dismissGreetingBtn" class="icon-btn" aria-label="Dismiss greeting" title="Dismiss">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- VIEW 1: OVERVIEW                                             -->
+        <!-- ============================================================ -->
+        <section id="view-overview" class="view-section">
+          <div class="kpi-grid">
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label" data-i18n="kpiBalance">Net Balance</span>
+                <span class="kpi-icon neutral">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+                </span>
               </div>
-              <div class="form-group flex-1">
-                <label for="incomeCategory">Category *</label>
-                <select id="incomeCategory" required>
-                  <!-- Populated dynamically via /api/config -->
-                </select>
+              <div id="kpiBalance" class="kpi-value mono">₹0.00</div>
+              <div id="kpiBalanceMeta" class="kpi-foot">Available net position</div>
+            </article>
+
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label" data-i18n="kpiIncome">Total Income</span>
+                <span class="kpi-icon income">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 17 10-10"/><path d="M7 7h10v10"/></svg>
+                </span>
+              </div>
+              <div id="kpiIncome" class="kpi-value mono text-income">₹0.00</div>
+              <div class="kpi-foot" data-i18n="kpiIncomeSub">Total recorded inflow</div>
+            </article>
+
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label" data-i18n="kpiExpense">Total Expenses</span>
+                <span class="kpi-icon expense">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7 17 17"/><path d="M17 7v10H7"/></svg>
+                </span>
+              </div>
+              <div id="kpiExpense" class="kpi-value mono text-expense">₹0.00</div>
+              <div class="kpi-foot" data-i18n="kpiExpenseSub">Total recorded outflow</div>
+            </article>
+
+            <article class="kpi-card">
+              <div class="kpi-top">
+                <span class="kpi-label" data-i18n="kpiSavings">Savings Rate</span>
+                <span class="kpi-icon accent">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </span>
+              </div>
+              <div id="kpiSavingsRate" class="kpi-value mono">0.0%</div>
+              <div class="progress-track">
+                <div id="kpiSavingsBar" class="progress-fill" style="width: 0%"></div>
+              </div>
+            </article>
+          </div>
+
+          <!-- PC Quick Strip -->
+          <div class="desktop-quick-strip">
+            <div class="quick-strip-left">
+              <span class="quick-strip-label" data-i18n="quickActionsLabel">Quick Actions</span>
+              <button type="button" id="quickAddExpenseBtn" class="btn btn-secondary btn-sm" data-i18n="quickLogExpense">- Log Expense</button>
+              <button type="button" id="quickAddIncomeBtn" class="btn btn-secondary btn-sm" data-i18n="quickLogIncome">+ Log Income</button>
+              <span id="activeRegionBadge" class="region-badge mono">IN · INR</span>
+            </div>
+            <div id="goalProgressPill" class="goal-pill hidden">
+              <span data-i18n="savingsTargetLabel">Monthly Savings Target:</span>
+              <strong id="goalProgressText" class="mono">₹0</strong>
+            </div>
+          </div>
+
+          <!-- Charts Grid -->
+          <div class="charts-grid">
+            <section class="panel chart-panel-wide">
+              <div class="panel-head">
+                <div>
+                  <h2 data-i18n="chartCashflow">Monthly Cashflow</h2>
+                  <p data-i18n="chartCashflowSub">Income, expenses, and net trend by month</p>
+                </div>
+                <div class="legend-inline">
+                  <span><i class="dot dot-income"></i><span data-i18n="typeIncome">Income</span></span>
+                  <span><i class="dot dot-expense"></i><span data-i18n="typeExpense">Expense</span></span>
+                  <span><i class="dot dot-net"></i><span data-i18n="netLabel">Net</span></span>
+                </div>
+              </div>
+              <div class="chart-stage">
+                <canvas id="cashflowChart"></canvas>
+                <div id="cashflowEmpty" class="empty-block hidden">
+                  <p data-i18n="cashflowEmpty">Add income or expenses to generate your monthly cashflow chart.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2 data-i18n="chartCategory">Spend by Category</h2>
+                  <p data-i18n="chartCategorySub">All-time expense distribution</p>
+                </div>
+              </div>
+              <div class="donut-layout">
+                <div class="donut-stage">
+                  <canvas id="categoryChart"></canvas>
+                  <div class="donut-center">
+                    <span data-i18n="totalSpendLabel">Total Spend</span>
+                    <strong id="categoryTotalCenter" class="mono">₹0</strong>
+                  </div>
+                </div>
+                <div id="categoryLegend" class="donut-legend"></div>
+                <div id="categoryEmpty" class="empty-block hidden">
+                  <p data-i18n="noExpensesYet">No expenses recorded yet.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Recent Transactions -->
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2 data-i18n="recentActivity">Recent Activity</h2>
+                <p data-i18n="recentActivitySub">Latest entries synced to your ledger</p>
+              </div>
+              <button type="button" id="viewAllTxBtn" class="btn btn-ghost btn-sm" data-i18n="viewAllBtn">View all &rarr;</button>
+            </div>
+            <div id="recentTxContainer" class="tx-compact-list"></div>
+          </section>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- VIEW 2: TRANSACTIONS LEDGER                                  -->
+        <!-- ============================================================ -->
+        <section id="view-transactions" class="view-section hidden">
+          <div class="panel">
+            <div class="toolbar">
+              <div class="toolbar-row">
+                <div class="pill-group" id="typeFilterPills" role="group" aria-label="Filter by type">
+                  <button type="button" class="pill-btn active" data-type="all" data-i18n="filterAll">All</button>
+                  <button type="button" class="pill-btn" data-type="Income" data-i18n="typeIncome">Income</button>
+                  <button type="button" class="pill-btn" data-type="Expense" data-i18n="typeExpense">Expense</button>
+                </div>
+
+                <div class="toolbar-controls">
+                  <input type="search" id="txSearchInput" class="input-sm" data-i18n-placeholder="filterSearchPlaceholder" placeholder="Filter note or category...">
+                  <select id="filterCategory" class="input-sm" aria-label="Filter category">
+                    <option value="all">All Categories</option>
+                  </select>
+                  <input type="date" id="filterDateFrom" class="input-sm" title="Start date" aria-label="Start date">
+                  <input type="date" id="filterDateTo" class="input-sm" title="End date" aria-label="End date">
+                  <button type="button" id="clearFiltersBtn" class="btn btn-ghost btn-sm" data-i18n="resetBtn">Reset</button>
+                  <button type="button" id="exportCsvBtn" class="btn btn-secondary btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" x2="12" y1="15" y2="3"/>
+                    </svg>
+                    <span>CSV</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label for="incomeDate">Date *</label>
-                <input type="date" id="incomeDate" required>
-              </div>
-              <div class="form-group flex-2">
-                <label for="incomeDesc">Description / Note</label>
-                <input type="text" id="incomeDesc" placeholder="e.g. Monthly salary from employer">
-              </div>
+            <div class="table-wrap">
+              <table class="ledger-table">
+                <thead>
+                  <tr>
+                    <th data-i18n="colDate">Date</th>
+                    <th data-i18n="colCategory">Category</th>
+                    <th data-i18n="colDescription">Description</th>
+                    <th data-i18n="colType">Type</th>
+                    <th class="text-right" data-i18n="colAmount">Amount</th>
+                    <th class="col-action"></th>
+                  </tr>
+                </thead>
+                <tbody id="transactionsTableBody"></tbody>
+              </table>
             </div>
 
-            <button type="submit" class="btn btn-income">Record Income</button>
-          </form>
-        </div>
-
-        <!-- Add Expense Card -->
-        <div class="card glass-panel">
-          <div class="card-header">
-            <h3 class="card-title text-expense">Add Expense</h3>
-            <span class="card-tag expense-tag">- Outflow</span>
-          </div>
-          <form id="expenseForm">
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label for="expenseAmount">Amount (₹) *</label>
-                <input type="number" id="expenseAmount" step="any" placeholder="e.g. 1200" required>
-              </div>
-              <div class="form-group flex-1">
-                <label for="expenseCategory">Category *</label>
-                <select id="expenseCategory" required>
-                  <!-- Populated dynamically via /api/config -->
-                </select>
+            <div id="txSummaryBar" class="ledger-footer">
+              <span id="txFilteredCount">0 transactions</span>
+              <div class="ledger-totals mono">
+                <span class="text-income" id="txFilteredIn">+₹0.00</span>
+                <span class="sep">&middot;</span>
+                <span class="text-expense" id="txFilteredOut">-₹0.00</span>
+                <span class="sep">&middot;</span>
+                <strong id="txFilteredNet">Net ₹0.00</strong>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label for="expenseDate">Date *</label>
-                <input type="date" id="expenseDate" required>
+        <!-- ============================================================ -->
+        <!-- VIEW 3: ANALYTICS                                            -->
+        <!-- ============================================================ -->
+        <section id="view-analytics" class="view-section hidden">
+          <div class="analytics-grid">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2 data-i18n="monthlyPerfTitle">Monthly Performance</h2>
+                  <p data-i18n="monthlyPerfSub">Inflow, outflow, and savings efficiency per month</p>
+                </div>
               </div>
-              <div class="form-group flex-2">
-                <label for="expenseDesc">Description / Note</label>
-                <input type="text" id="expenseDesc" placeholder="e.g. Weekly grocery shopping">
+              <div class="table-wrap">
+                <table class="ledger-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="colMonth">Month</th>
+                      <th class="text-right" data-i18n="typeIncome">Income</th>
+                      <th class="text-right" data-i18n="typeExpense">Expenses</th>
+                      <th class="text-right" data-i18n="colNetSavings">Net Savings</th>
+                      <th data-i18n="colEfficiency">Efficiency</th>
+                    </tr>
+                  </thead>
+                  <tbody id="monthlyTableBody"></tbody>
+                </table>
               </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2 data-i18n="catAllocTitle">Category Allocation</h2>
+                  <p data-i18n="catAllocSub">Ranked share of total spending</p>
+                </div>
+              </div>
+              <div id="categoryBreakdownList" class="breakdown-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- Dashboard Footer -->
+        <footer class="portfolio-footer" id="siteFooter">
+          <div class="portfolio-footer__inner">
+            <p class="portfolio-footer__credit">
+              Designed and developed by
+              <a
+                href="https://saptak-dev.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="portfolio-footer__brand-link"
+              >
+                <strong>Saptak Sardar</strong> (panda4596)
+              </a>.
+              Content, data, and operations are owned and maintained by Saptak Sardar[cite: 11].
+            </p>
+
+            <div class="portfolio-footer__bottom">
+              <nav class="portfolio-footer__links" aria-label="Legal policies">
+                <a
+                  href="https://saptak-dev.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="portfolio-footer__link"
+                >
+                  Portfolio
+                </a>
+                <span class="portfolio-footer__divider" aria-hidden="true">|</span>
+                <button type="button" class="portfolio-footer__link" data-legal-modal="privacy">Privacy Policy</button>
+                <span class="portfolio-footer__divider" aria-hidden="true">|</span>
+                <button type="button" class="portfolio-footer__link" data-legal-modal="terms">Terms &amp; Conditions</button>
+                <span class="portfolio-footer__divider" aria-hidden="true">|</span>
+                <button type="button" class="portfolio-footer__link" data-legal-modal="copyright">Copyright Policy</button>
+              </nav>
+
+              <a href="#top" class="portfolio-footer__top" id="backToTopLink">
+                Back to top <span aria-hidden="true">&uarr;</span>
+              </a>
             </div>
 
-            <button type="submit" class="btn btn-expense">Record Expense</button>
-          </form>
-        </div>
-
-      </section>
-
-      <!-- 3. Summaries Grid: Monthly Breakdown & Category Breakdown -->
-      <section class="summaries-grid">
-        
-        <!-- Category Summary -->
-        <div class="card glass-panel">
-          <div class="card-header">
-            <h3 class="card-title">Category-wise Expenses</h3>
-            <span class="card-meta">All-time</span>
+            <p class="portfolio-footer__copy">
+              &copy; 2026 Saptak Sardar (panda4596). All rights reserved[cite: 11].
+            </p>
           </div>
-          <div id="categorySummaryContainer" class="summary-list">
-            <p class="empty-state">No expenses recorded yet.</p>
-          </div>
-        </div>
-
-        <!-- Monthly Summary -->
-        <div class="card glass-panel">
-          <div class="card-header">
-            <h3 class="card-title">Monthly Financial Summary</h3>
-            <span class="card-meta">Inflows vs Outflows</span>
-          </div>
-          <div id="monthlySummaryContainer" class="summary-list">
-            <p class="empty-state">No monthly data available yet.</p>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- 4. Transactions History with Filtering and Deletion -->
-      <section class="card glass-panel transactions-card">
-        <div class="card-header-flex">
-          <div>
-            <h3 class="card-title">Transaction History</h3>
-            <p class="subtitle" id="txCountSubtitle">0 records recorded in private cloud</p>
-          </div>
-
-          <!-- Filters -->
-          <div class="filters-bar">
-            <select id="filterType" class="filter-input">
-              <option value="all">All Types</option>
-              <option value="Income">Income only</option>
-              <option value="Expense">Expense only</option>
-            </select>
-
-            <input type="date" id="filterDateFrom" class="filter-input" title="From Date">
-            <input type="date" id="filterDateTo" class="filter-input" title="To Date">
-
-            <button type="button" id="clearFiltersBtn" class="btn btn-secondary btn-sm">Clear</button>
-          </div>
-        </div>
-
-        <div id="transactionsContainer" class="transactions-list">
-          <p class="empty-state">No transactions recorded yet.</p>
-        </div>
-      </section>
-
-    </section>
-
+        </footer>
+      </div>
+    </div>
   </div>
 
+  <!-- ================================================================== -->
+  <!-- LEGAL INFO MODAL                                                   -->
+  <!-- ================================================================== -->
+  <div id="legalModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="legalModalTitle">
+    <div class="modal-card legal-modal-card">
+      <div class="modal-head-row">
+        <div>
+          <h3 id="legalModalTitle">Legal Notice</h3>
+          <p class="modal-sub">Panda Financial Tracker &middot; Saptak Sardar (panda4596)</p>
+        </div>
+        <button type="button" id="closeLegalModalBtn" class="icon-btn" aria-label="Close legal modal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+      <div id="legalModalBody" class="legal-modal-body"></div>
+      <div class="modal-actions">
+        <button type="button" id="okLegalModalBtn" class="btn btn-primary btn-sm" data-i18n="closeBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- ACCOUNT & PERSONAL DETAILS MODAL                                   -->
+  <!-- ================================================================== -->
+  <div id="accountModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="accountModalTitle">
+    <div class="modal-card account-modal-card">
+      <div class="modal-head-row">
+        <div>
+          <h3 id="accountModalTitle" data-i18n="accountModalTitle">Account &amp; Personal Details</h3>
+          <p class="modal-sub" data-i18n="accountModalSub">Update your name, country, language, currency, and personal info.</p>
+        </div>
+        <button type="button" id="closeAccountModalBtn" class="icon-btn" aria-label="Close account modal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form id="accountForm" class="account-form">
+        <div class="field-row">
+          <div class="field flex-1">
+            <label for="profileNameInput" data-i18n="fullNameLabel">Full Name</label>
+            <input type="text" id="profileNameInput" maxlength="80" autocomplete="name" required>
+          </div>
+          <div class="field flex-1">
+            <label for="profilePhoneInput" data-i18n="phoneLabel">Phone Number</label>
+            <input type="tel" id="profilePhoneInput" maxlength="25" autocomplete="tel">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field flex-1">
+            <label for="profileCountrySelect" data-i18n="countryLabel">Country</label>
+            <select id="profileCountrySelect"></select>
+          </div>
+          <div class="field flex-1">
+            <label for="profileCurrencySelect" data-i18n="currencyLabel">Income &amp; Display Currency</label>
+            <select id="profileCurrencySelect">
+              <option value="INR">INR (₹) — Indian Rupee</option>
+              <option value="USD">USD ($) — US Dollar</option>
+              <option value="EUR">EUR (€) — Euro</option>
+              <option value="GBP">GBP (£) — British Pound</option>
+              <option value="BDT">BDT (৳) — Bangladeshi Taka</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field flex-1">
+            <label for="profileLangSelect" data-i18n="languageLabel">Website Language</label>
+            <select id="profileLangSelect">
+              <option value="en">English (EN)</option>
+              <option value="bn">বাংলা (BN)</option>
+              <option value="hi">हिन्दी (HI)</option>
+            </select>
+          </div>
+          <div class="field flex-1">
+            <label for="profileEmailInput" data-i18n="emailLabel">Email Address</label>
+            <input type="email" id="profileEmailInput" autocomplete="email" required>
+          </div>
+        </div>
+        <span id="emailHintText" class="field-hint" data-i18n="emailChangeHint">Changing email sends a confirmation link via Supabase Auth.</span>
+
+        <div class="field-row">
+          <div class="field flex-1">
+            <label for="profileCityInput" data-i18n="cityLabel">City / Location</label>
+            <input type="text" id="profileCityInput" maxlength="60" autocomplete="address-level2">
+          </div>
+          <div class="field flex-1">
+            <label for="profileGoalInput" data-i18n="goalLabel">Monthly Savings Goal</label>
+            <input type="number" id="profileGoalInput" class="mono" min="0" step="any">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="profileBioInput" data-i18n="bioLabel">Personal Note / Bio</label>
+          <input type="text" id="profileBioInput" maxlength="160">
+        </div>
+
+        <div id="customFieldsList" class="custom-fields-list"></div>
+
+        <div class="add-extra-bar">
+          <input type="text" id="newExtraLabel" class="input-sm" maxlength="32" data-i18n-placeholder="extraLabelPlaceholder" placeholder="New detail label">
+          <input type="text" id="newExtraValue" class="input-sm" maxlength="80" data-i18n-placeholder="extraValuePlaceholder" placeholder="Value">
+          <button type="button" id="addExtraFieldBtn" class="btn btn-secondary btn-sm" data-i18n="addBtn">+ Add</button>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelAccountBtn" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+          <button type="submit" id="saveAccountBtn" class="btn btn-primary" data-i18n="saveDetailsBtn">Save Details</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================================================================== -->
+  <!-- SLIDE-OVER TRANSACTION DRAWER                                      -->
+  <!-- ================================================================== -->
+  <div id="drawerBackdrop" class="backdrop hidden"></div>
+  <aside id="txDrawer" class="drawer hidden" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+    <div class="drawer-header">
+      <div>
+        <h2 id="drawerTitle" data-i18n="drawerTitle">New Transaction</h2>
+        <p id="drawerCurrencyNote">Recording in INR (₹)</p>
+      </div>
+      <button type="button" id="closeDrawerBtn" class="icon-btn" aria-label="Close drawer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="txForm" class="drawer-body">
+      <div class="segmented-control">
+        <button type="button" id="drawerTypeExpense" class="seg-btn active" data-kind="Expense" data-i18n="typeExpense">Expense</button>
+        <button type="button" id="drawerTypeIncome" class="seg-btn" data-kind="Income" data-i18n="typeIncome">Income</button>
+      </div>
+
+      <div class="field">
+        <label for="txAmount"><span data-i18n="amountLabel">Amount</span> (<span id="txCurrencyCodeLabel">INR</span>)</label>
+        <div class="currency-input">
+          <span id="txCurrencySymbol" class="currency-prefix mono">₹</span>
+          <input type="number" id="txAmount" class="mono" step="any" min="0.01" placeholder="0.00" required>
+        </div>
+        <div class="quick-chips">
+          <button type="button" class="chip-btn quick-amt-btn" data-add="100">+100</button>
+          <button type="button" class="chip-btn quick-amt-btn" data-add="500">+500</button>
+          <button type="button" class="chip-btn quick-amt-btn" data-add="1000">+1,000</button>
+          <button type="button" class="chip-btn quick-amt-btn" data-add="5000">+5,000</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field flex-1">
+          <label for="txCategory" data-i18n="colCategory">Category</label>
+          <select id="txCategory" required></select>
+        </div>
+        <div class="field flex-1">
+          <label for="txDate" data-i18n="colDate">Date</label>
+          <input type="date" id="txDate" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="txDesc" data-i18n="descOptionalLabel">Description (optional)</label>
+        <input type="text" id="txDesc" maxlength="140" data-i18n-placeholder="descPlaceholder" placeholder="e.g., Groceries, Semester books, Freelance invoice">
+      </div>
+
+      <div class="drawer-footer">
+        <button type="button" id="cancelDrawerBtn" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button type="submit" id="txSubmitBtn" class="btn btn-expense flex-1">Record Expense</button>
+      </div>
+    </form>
+  </aside>
+
+  <!-- ================================================================== -->
+  <!-- DELETE CONFIRMATION MODAL                                          -->
+  <!-- ================================================================== -->
+  <div id="deleteModal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+    <div class="modal-card">
+      <h3 id="deleteModalTitle" data-i18n="deleteTitle">Delete transaction?</h3>
+      <p id="deleteModalDesc">This record will be permanently removed from your ledger.</p>
+      <div class="modal-actions">
+        <button type="button" id="cancelDeleteBtn" class="btn btn-ghost" data-i18n="cancelBtn">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger" data-i18n="deleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/charts.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

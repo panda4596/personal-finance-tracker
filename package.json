@@ -1,0 +1,21 @@
+{
+  "name": "finanace-tracker",
+  "version": "1.0.0",
+  "description": "A beginner-friendly Python project for recording and managing income and expenses through a terminal-based menu.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/panda4596/personal-finance-tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/panda4596/personal-finance-tracker/issues"
+  },
+  "homepage": "https://github.com/panda4596/personal-finance-tracker#readme"
+}
